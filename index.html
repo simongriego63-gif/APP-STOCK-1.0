@@ -446,13 +446,13 @@ async function guardarMov() {
                 const stockFinal = window.stockGlobal[idProd];
                 const stockMinimo = window.minGlobal[idProd];
                 
-                // Si es salida y perforó el piso, manda correo, WhatsApp y cambia el texto de la alerta
+                                // Si es salida y perforó el piso, manda correo, WhatsApp y cambia el texto de la alerta
                 if (tipoSel === 'Salida' && stockFinal <= stockMinimo) {
-                    enviarAlertas(nombreProd, stockFinal, stockMinimo); // <--- UNA SOLA LÍNEA
+                    enviarAlertaMail(nombreProd, stockFinal, stockMinimo);      // <-- LLAMADA 1
+                    enviarAlertaWhatsApp(nombreProd, stockFinal, stockMinimo);  // <-- LLAMADA 2
                     mostrarAlerta(`Movimiento guardado. ¡Ojo! Stock bajo de ${nombreProd}`, "info");
                 } else {
-                    mostrarAlerta("¡Movimiento guardado exitosamente!", "exito"); 
-                }
+
                 // --------------------------------------------------------
 
                 cantInput.value = ''; 
