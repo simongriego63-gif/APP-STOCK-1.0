@@ -202,24 +202,42 @@
             }
             return fechaStr;
         }
-        
-       async function enviarAlertas(nombreProd, stockActual, stockMin) {
+  
+
+
+
+
+        async function enviarAlertaMail(nombreProd, stockActual, stockMin) {
             const urlBackend = 'https://script.google.com/macros/s/AKfycbwfDZHgQjKWYvbi3X1FXZYg30pp8KEaD6sf7qrRW1F4T50984PjQC9UvtrW6f5rwN-e/exec';
             try {
-                // Mandamos UNA sola petición al backend con la acción "sendAlertas"
                 fetch(urlBackend, {
                     method: 'POST',
                     body: JSON.stringify({
-                        action: "sendAlertas", 
+                        action: "sendEmail", 
                         nombreProd: nombreProd,
                         stockActual: stockActual,
                         stockMin: stockMin
                     })
                 });
-            } catch (e) {
-                console.log("Error silencioso al mandar alertas:", e);
-            }
+            } catch (e) { console.log("Error al mandar mail:", e); }
         }
+
+        async function enviarAlertaWhatsApp(nombreProd, stockActual, stockMin) {
+            const urlBackend = 'https://script.google.com/macros/s/AKfycbwfDZHgQjKWYvbi3X1FXZYg30pp8KEaD6sf7qrRW1F4T50984PjQC9UvtrW6f5rwN-e/exec';
+            try {
+                fetch(urlBackend, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        action: "sendWhatsApp", 
+                        nombreProd: nombreProd,
+                        stockActual: stockActual,
+                        stockMin: stockMin
+                    })
+                });
+            } catch (e) { console.log("Error al mandar wsp:", e); }
+        }
+
+
 
 
 
