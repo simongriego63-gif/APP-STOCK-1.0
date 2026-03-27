@@ -203,37 +203,21 @@
             return fechaStr;
         }
         
-        async function enviarAlertaMail(nombreProd, stockActual, stockMin) {
-            const urlBackend = 'https://script.google.com/macros/s/AKfycbyFyQ6vdkQovmw-Y1FZZ6g6Lmo0foUG7R1HhZ78n5S38iIzSqeq382Asr8GQjL3EOsS/exec';
-            try {
-                // Lo mandamos usando fetch, sin "await" para que no congele la pantalla del usuario
-                fetch(urlBackend, {
-                    method: 'POST',
-                    body: JSON.stringify({
-                        action: "sendEmail",
-                        nombreProd: nombreProd,
-                        stockActual: stockActual,
-                        stockMin: stockMin
-                    })
-                });
-            } catch (e) {
-                console.log("Error silencioso al mandar mail:", e);
-            }
-        }
-        async function enviarAlertaWhatsApp(nombreProd, stockActual, stockMin) {
+       async function enviarAlertas(nombreProd, stockActual, stockMin) {
             const urlBackend = 'https://script.google.com/macros/s/AKfycbwfDZHgQjKWYvbi3X1FXZYg30pp8KEaD6sf7qrRW1F4T50984PjQC9UvtrW6f5rwN-e/exec';
             try {
+                // Mandamos UNA sola petición al backend con la acción "sendAlertas"
                 fetch(urlBackend, {
                     method: 'POST',
                     body: JSON.stringify({
-                        action: "sendWhatsApp",
+                        action: "sendAlertas", 
                         nombreProd: nombreProd,
                         stockActual: stockActual,
                         stockMin: stockMin
                     })
                 });
             } catch (e) {
-                console.log("Error silencioso al mandar WhatsApp:", e);
+                console.log("Error silencioso al mandar alertas:", e);
             }
         }
 
@@ -440,15 +424,13 @@ async function guardarMov() {
                 const nombreProd = opcion.text.split(' (Disp:')[0];
                 opcion.text = `${nombreProd} (Disp: ${window.stockGlobal[idProd]})`;
                 
-                // --- NUEVO: CHEQUEO DE STOCK MÍNIMO PARA MANDAR MAIL ---
+               // --- NUEVO: CHEQUEO DE STOCK MÍNIMO PARA MANDAR MAIL Y WSP ---
                 const stockFinal = window.stockGlobal[idProd];
                 const stockMinimo = window.minGlobal[idProd];
                 
-                // Si es salida y perforó el piso, manda correo y cambia el texto de la alerta
+                // Si es salida y perforó el piso, manda correo, WhatsApp y cambia el texto de la alerta
                 if (tipoSel === 'Salida' && stockFinal <= stockMinimo) {
-                    enviarAlertaMail(nombreProd, stockFinal, stockMinimo);
-enviarAlertaWhatsApp(nombreProd, stockFinal, stockMinimo);
-
+                    enviarAlertas(nombreProd, stockFinal, stockMinimo); // <--- UNA SOLA LÍNEA
                     mostrarAlerta(`Movimiento guardado. ¡Ojo! Stock bajo de ${nombreProd}`, "info");
                 } else {
                     mostrarAlerta("¡Movimiento guardado exitosamente!", "exito"); 
