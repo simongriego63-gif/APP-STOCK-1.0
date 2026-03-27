@@ -452,6 +452,8 @@ async function guardarMov() {
                     enviarAlertaWhatsApp(nombreProd, stockFinal, stockMinimo);  // <-- LLAMADA 2
                     mostrarAlerta(`Movimiento guardado. ¡Ojo! Stock bajo de ${nombreProd}`, "info");
                 } else {
+                    mostrarAlerta("¡Movimiento guardado exitosamente!", "exito"); 
+                }
 
                 // --------------------------------------------------------
 
