@@ -374,78 +374,75 @@
         }
        
 async function guardarMov() {
-            const btn = document.getElementById('btnSave');
-            const cantInput = document.getElementById('inputCant');
-            const cant = parseInt(cantInput.value);
-            const selProd = document.getElementById('selectProd');
-            const idProd = selProd.value; 
+    const btn = document.getElementById('btnSave');
+    const cantInput = document.getElementById('inputCant');
+    const cant = parseInt(cantInput.value);
+    const selProd = document.getElementById('selectProd');
+    const idProd = selProd.value; 
 
-            if (!idProd || idProd === "") return mostrarAlerta("Por favor, selecciona un producto válido.", "error");
-            if (!cant || cant <= 0) return mostrarAlerta("Ingresa una cantidad mayor a cero.", "error");
+    if (!idProd || idProd === "") return mostrarAlerta("Por favor, selecciona un producto válido.", "error");
+    if (!cant || cant <= 0) return mostrarAlerta("Ingresa una cantidad mayor a cero.", "error");
 
-            if (tipoSel === 'Salida') {
-                const stockDisponible = window.stockGlobal ? (window.stockGlobal[idProd] || 0) : 0;
-                if (cant > stockDisponible) {
-                    return mostrarAlerta(`No podés retirar ${cant}. Solo tenés ${stockDisponible} en stock.`, "error");
-                }
-            }
-
-            btn.disabled = true; 
-            btn.innerText = "GUARDANDO...";
-            
-            try {
-                const d = new Date();
-                const dia = String(d.getDate()).padStart(2, '0');
-                const mes = String(d.getMonth() + 1).padStart(2, '0');
-                const anio = d.getFullYear();
-                const horas = String(d.getHours()).padStart(2, '0');
-                const minutos = String(d.getMinutes()).padStart(2, '0');
-                const segundos = String(d.getSeconds()).padStart(2, '0');
-                const fechaAppSheet = `${dia}/${mes}/${anio} ${horas}:${minutos}:${segundos}`;
-
-                await callAppSheet(API.mov, "Add", [{
-                    "PRODUCTO": idProd, 
-                    "CANTIDAD": cant, 
-                    "TIPO": tipoSel, 
-                    "FECHA": fechaAppSheet
-                }]);
-                
-                // Actualizamos la memoria
-                if (tipoSel === 'Entrada') {
-                    window.stockGlobal[idProd] += cant;
-                } else {
-                    window.stockGlobal[idProd] -= cant;
-                }
-                
-                const opcion = selProd.options[selProd.selectedIndex];
-                const nombreProd = opcion.text.split(' (Disp:')[0];
-                opcion.text = `${nombreProd} (Disp: ${window.stockGlobal[idProd]})`;
-                
-               // --- NUEVO: CHEQUEO DE STOCK MÍNIMO PARA MANDAR MAIL Y WSP ---
-                const stockFinal = window.stockGlobal[idProd];
-                const stockMinimo = window.minGlobal[idProd];
-                
-                                // Si es salida y perforó el piso, manda correo, WhatsApp y cambia el texto de la alerta
-                if (tipoSel === 'Salida' && stockFinal <= stockMinimo) {
-                    enviarAlertaMail(nombreProd, stockFinal, stockMinimo);      // <-- LLAMADA 1
-                    enviarAlertaWhatsApp(nombreProd, stockFinal, stockMinimo);  // <-- LLAMADA 2
-                    mostrarAlerta(`Movimiento guardado. ¡Ojo! Stock bajo de ${nombreProd}`, "info");
-                } else {
-                    mostrarAlerta("¡Movimiento guardado exitosamente!", "exito"); 
-                }
-
-                // --------------------------------------------------------
-
-                cantInput.value = ''; 
-                
-            } catch (e) { 
-                mostrarAlerta(e.message, "error"); 
-            }
-            
-            btn.disabled = false; 
-            btn.innerText = "CONFIRMAR";
+    if (tipoSel === 'Salida') {
+        const stockDisponible = window.stockGlobal ? (window.stockGlobal[idProd] || 0) : 0;
+        if (cant > stockDisponible) {
+            return mostrarAlerta(`No podés retirar ${cant}. Solo tenés ${stockDisponible} en stock.`, "error");
         }
-        // =========================================================================
+    }
+
+    btn.disabled = true; 
+    btn.innerText = "GUARDANDO...";
+    
+    try {
+        const d = new Date();
+        const dia = String(d.getDate()).padStart(2, '0');
+        const mes = String(d.getMonth() + 1).padStart(2, '0');
+        const anio = d.getFullYear();
+        const horas = String(d.getHours()).padStart(2, '0');
+        const minutos = String(d.getMinutes()).padStart(2, '0');
+        const segundos = String(d.getSeconds()).padStart(2, '0');
+        const fechaAppSheet = `${dia}/${mes}/${anio} ${horas}:${minutos}:${segundos}`;
+
+        await callAppSheet(API.mov, "Add", [{
+            "PRODUCTO": idProd, 
+            "CANTIDAD": cant, 
+            "TIPO": tipoSel, 
+            "FECHA": fechaAppSheet
+        }]);
+        
+        // Actualizamos la memoria
+        if (tipoSel === 'Entrada') {
+            window.stockGlobal[idProd] += cant;
+        } else {
+            window.stockGlobal[idProd] -= cant;
+        }
+        
+        const opcion = selProd.options[selProd.selectedIndex];
+        const nombreProd = opcion.text.split(' (Disp:')[0];
+        opcion.text = `${nombreProd} (Disp: ${window.stockGlobal[idProd]})`;
+        
+       // --- CHEQUEO DE STOCK MÍNIMO PARA MANDAR MAIL ---
+        const stockFinal = window.stockGlobal[idProd];
+        const stockMinimo = window.minGlobal[idProd];
+        
+        // Si es salida y perforó el piso, manda correo y cambia el texto de la alerta
+        if (tipoSel === 'Salida' && stockFinal <= stockMinimo) {
+            enviarAlertas(nombreProd, stockFinal, stockMinimo); // <-- VUELVE A SER UNA SOLA LÍNEA
+            mostrarAlerta(`Movimiento guardado. ¡Ojo! Stock bajo de ${nombreProd}`, "info");
+        } else {
+            mostrarAlerta("¡Movimiento guardado exitosamente!", "exito"); 
+        }
+
+        cantInput.value = ''; 
+        
+    } catch (e) { 
+        mostrarAlerta(e.message, "error"); 
+    }
+    
+    btn.disabled = false; 
+    btn.innerText = "CONFIRMAR";
+}
+ =========================================================================
         // 7. MÓDULO: GESTIÓN DE PRODUCTOS E INVENTARIO
         // =========================================================================
 
