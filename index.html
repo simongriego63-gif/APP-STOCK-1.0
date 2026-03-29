@@ -280,10 +280,14 @@
         // 5. CONEXIÓN AL BACKEND
         // =========================================================================
 
-        async function callAppSheet(tableName, action, rows = []) {
+async function callAppSheet(tableName, action, rows = []) {
             try {
                 const response = await fetch(urlBackend, {
                     method: 'POST',
+                    redirect: 'follow', // <-- CLAVE: Le dice al navegador que siga la redirección interna de Google
+                    headers: {
+                        "Content-Type": "text/plain;charset=utf-8" // <-- CLAVE: Evita el bloqueo CORS de preflight
+                    },
                     body: JSON.stringify({
                         tableName: tableName,
                         payload: { 
@@ -300,7 +304,6 @@
                 throw new Error("Error del Servidor: " + error.message);
             }
         }
-
         async function syncDatos() {
             const [prods, movs] = await Promise.all([callAppSheet(API.prod, "Find"), callAppSheet(API.mov, "Find")]);
             localStorage.setItem('stock_prods', JSON.stringify(prods));
