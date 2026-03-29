@@ -7,7 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        /* Diseño temático, misma lógica */
+        /* Diseño temático */
         body { background-color: #FAF6F3; font-family: 'Inter', sans-serif; }
         .card-action { background: white; border-radius: 24px; box-shadow: 0 10px 25px rgba(74, 48, 34, 0.05); transition: all 0.2s; cursor: pointer; border: 1px solid #F5EBE6; }
         .card-action:active { transform: scale(0.97); background: #FDFBF9; }
@@ -88,7 +88,6 @@
         </div>
 
         <div id="lista-prods" class="grid gap-3 mb-24"></div>
-        
         <div onclick="nuevoProdPrompt()" class="fab shadow-xl"><i class="fas fa-plus"></i></div>
     </div>
 
@@ -101,7 +100,6 @@
             <button id="filtro-entradas" onclick="filtrarHistorial('Entrada')" class="flex-1 py-2 text-xs font-bold rounded-xl text-amber-800/60 hover:text-[#4A3022] transition-all">ENTRADAS</button>
             <button id="filtro-salidas" onclick="filtrarHistorial('Salida')" class="flex-1 py-2 text-xs font-bold rounded-xl text-amber-800/60 hover:text-[#4A3022] transition-all">SALIDAS</button>
         </div>
-
         <div id="lista-hist" class="grid gap-3 mb-6"></div>
     </div>
 
@@ -164,10 +162,10 @@
             </div>
         </div>
     </div>
-        
+
 <script>
         // =========================================================================
-        // 1. VARIABLES GLOBALES Y CREDENCIALES
+        // 1. VARIABLES GLOBALES Y CREDENCIALES (ACTUALIZADAS)
         // =========================================================================
         
         const API = {
@@ -177,6 +175,8 @@
             prod: "PRODUCTOS"
         };
 
+        const urlBackend = 'https://script.google.com/macros/s/AKfycbwfDZHgQjKWYvbi3X1FXZYg30pp8KEaD6sf7qrRW1F4T50984PjQC9UvtrW6f5rwN-e/exec';
+
         let tipoSel = "Entrada";
         let confirmCallback = null;
         let datosHistorial = [];
@@ -184,7 +184,6 @@
         let filtroHistorial = 'Todos';
         let datosProductos = [];
         let stockMapaProductos = {};
-
 
         // =========================================================================
         // 2. UTILIDADES GENERALES
@@ -197,28 +196,24 @@
         function fechaArg(fechaStr) {
             if (!fechaStr) return '';
             const partes = fechaStr.split(':');
-            if (partes.length === 3) {
-                return partes[0] + ':' + partes[1];
-            }
-            return fechaStr;
+            return partes.length === 3 ? partes[0] + ':' + partes[1] : fechaStr;
         }
-  
-
-        async function enviarAlertas(nombreProd, stockActual, stockMin) {
-            const urlBackend = 'https://script.google.com/macros/s/AKfycbwfDZHgQjKWYvbi3X1FXZYg30pp8KEaD6sf7qrRW1F4T50984PjQC9UvtrW6f5rwN-e/exec';
+        
+        async function enviarAlertaMail(nombreProd, stockActual, stockMin) {
             try {
                 fetch(urlBackend, {
                     method: 'POST',
                     body: JSON.stringify({
-                        action: "sendAlertas", // Vuelve a decir sendAlertas
+                        action: "sendEmail",
                         nombreProd: nombreProd,
                         stockActual: stockActual,
                         stockMin: stockMin
                     })
                 });
-            } catch (e) { console.log("Error al mandar alertas:", e); }
+            } catch (e) {
+                console.log("Error silencioso al mandar mail:", e);
+            }
         }
-
 
         // =========================================================================
         // 3. CONTROL DE INTERFAZ Y NAVEGACIÓN
@@ -237,7 +232,6 @@
 
         function nuevoProdPrompt() { document.getElementById('modal-producto').classList.remove('hidden'); }
         function cerrarModal() { document.getElementById('modal-producto').classList.add('hidden'); }
-
 
         // =========================================================================
         // 4. SISTEMA DE ALERTAS Y CONFIRMACIONES
@@ -269,11 +263,9 @@
             document.getElementById('modal-alerta').classList.remove('hidden');
             document.getElementById('alerta-mensaje').innerText = mensaje;
             document.getElementById('alerta-titulo').innerText = "¿Estás seguro?";
-            
             const icono = document.getElementById('alerta-icono');
             icono.className = "w-16 h-16 mx-auto bg-amber-50 text-amber-500 rounded-full flex items-center justify-center text-3xl mb-4";
             icono.innerHTML = '<i class="fas fa-question"></i>';
-
             confirmCallback = callback;
             document.getElementById('alerta-botones').innerHTML = `
                 <button onclick="cerrarAlerta()" class="flex-1 p-4 text-slate-400 font-bold active:text-slate-600">CANCELAR</button>
@@ -284,14 +276,11 @@
         function cerrarAlerta() { document.getElementById('modal-alerta').classList.add('hidden'); }
         function ejecutarConfirmacion() { cerrarAlerta(); if (confirmCallback) confirmCallback(); }
 
-
         // =========================================================================
-        // 5. CONEXIÓN AL BACKEND Y MEMORIA LOCAL (CACHÉ)
+        // 5. CONEXIÓN AL BACKEND
         // =========================================================================
 
         async function callAppSheet(tableName, action, rows = []) {
-            const urlBackend = 'https://script.google.com/macros/s/AKfycbyFyQ6vdkQovmw-Y1FZZ6g6Lmo0foUG7R1HhZ78n5S38iIzSqeq382Asr8GQjL3EOsS/exec';
-            
             try {
                 const response = await fetch(urlBackend, {
                     method: 'POST',
@@ -304,11 +293,9 @@
                         }
                     })
                 });
-                
                 const data = await response.json();
                 if (data.error) throw new Error(data.error);
                 return data;
-                
             } catch (error) {
                 throw new Error("Error del Servidor: " + error.message);
             }
@@ -327,7 +314,6 @@
             return { prods, movs };
         }
 
-
         // =========================================================================
         // 6. MÓDULO: REGISTRAR MOVIMIENTOS
         // =========================================================================
@@ -335,11 +321,9 @@
         async function abrirCarga() {
             showPage('movimientos');
             const sel = document.getElementById('selectProd');
-            
             const locales = getDatosLocales();
             if (locales.prods.length > 0) procesarSelectCarga(locales.prods, locales.movs, sel);
             else sel.innerHTML = '<option value="">Cargando base de datos...</option>';
-
             try {
                 const frescos = await syncDatos();
                 procesarSelectCarga(frescos.prods, frescos.movs, sel);
@@ -353,114 +337,83 @@
 
         function procesarSelectCarga(prods, movs, sel) {
             window.stockGlobal = {}; 
-            window.minGlobal = {}; // NUEVO: Guardamos en memoria el stock mínimo de cada producto
-            
+            window.minGlobal = {};
             prods.forEach(p => {
                 window.stockGlobal[getId(p)] = 0;
                 window.minGlobal[getId(p)] = parseInt(p["STOCK MINIMO"]) || 0;
             });
-            
             movs.forEach(m => {
                 const cant = parseInt(m.CANTIDAD) || 0;
                 if (m.TIPO === 'Entrada') window.stockGlobal[m.PRODUCTO] += cant;
                 else window.stockGlobal[m.PRODUCTO] -= cant;
             });
-            
             sel.innerHTML = '<option value="">Seleccionar Producto...</option>' + prods.map(p => {
                 const idReal = getId(p);
                 const disp = window.stockGlobal[idReal] || 0;
                 return `<option value="${idReal}">${p.NOMBRE} (Disp: ${disp})</option>`;
             }).join('');
         }
-       
-async function guardarMov() {
-    const btn = document.getElementById('btnSave');
-    const cantInput = document.getElementById('inputCant');
-    const cant = parseInt(cantInput.value);
-    const selProd = document.getElementById('selectProd');
-    const idProd = selProd.value; 
-
-    if (!idProd || idProd === "") return mostrarAlerta("Por favor, selecciona un producto válido.", "error");
-    if (!cant || cant <= 0) return mostrarAlerta("Ingresa una cantidad mayor a cero.", "error");
-
-    if (tipoSel === 'Salida') {
-        const stockDisponible = window.stockGlobal ? (window.stockGlobal[idProd] || 0) : 0;
-        if (cant > stockDisponible) {
-            return mostrarAlerta(`No podés retirar ${cant}. Solo tenés ${stockDisponible} en stock.`, "error");
-        }
-    }
-
-    btn.disabled = true; 
-    btn.innerText = "GUARDANDO...";
-    
-    try {
-        const d = new Date();
-        const dia = String(d.getDate()).padStart(2, '0');
-        const mes = String(d.getMonth() + 1).padStart(2, '0');
-        const anio = d.getFullYear();
-        const horas = String(d.getHours()).padStart(2, '0');
-        const minutos = String(d.getMinutes()).padStart(2, '0');
-        const segundos = String(d.getSeconds()).padStart(2, '0');
-        const fechaAppSheet = `${dia}/${mes}/${anio} ${horas}:${minutos}:${segundos}`;
-
-        await callAppSheet(API.mov, "Add", [{
-            "PRODUCTO": idProd, 
-            "CANTIDAD": cant, 
-            "TIPO": tipoSel, 
-            "FECHA": fechaAppSheet
-        }]);
         
-        // Actualizamos la memoria
-        if (tipoSel === 'Entrada') {
-            window.stockGlobal[idProd] += cant;
-        } else {
-            window.stockGlobal[idProd] -= cant;
-        }
-        
-        const opcion = selProd.options[selProd.selectedIndex];
-        const nombreProd = opcion.text.split(' (Disp:')[0];
-        opcion.text = `${nombreProd} (Disp: ${window.stockGlobal[idProd]})`;
-        
-       // --- CHEQUEO DE STOCK MÍNIMO PARA MANDAR MAIL ---
-        const stockFinal = window.stockGlobal[idProd];
-        const stockMinimo = window.minGlobal[idProd];
-        
-        // Si es salida y perforó el piso, manda correo y cambia el texto de la alerta
-        if (tipoSel === 'Salida' && stockFinal <= stockMinimo) {
-            enviarAlertas(nombreProd, stockFinal, stockMinimo); // <-- VUELVE A SER UNA SOLA LÍNEA
-            mostrarAlerta(`Movimiento guardado. ¡Ojo! Stock bajo de ${nombreProd}`, "info");
-        } else {
-            mostrarAlerta("¡Movimiento guardado exitosamente!", "exito"); 
+        async function guardarMov() {
+            const btn = document.getElementById('btnSave');
+            const cantInput = document.getElementById('inputCant');
+            const cant = parseInt(cantInput.value);
+            const selProd = document.getElementById('selectProd');
+            const idProd = selProd.value; 
+
+            if (!idProd || idProd === "") return mostrarAlerta("Por favor, selecciona un producto válido.", "error");
+            if (!cant || cant <= 0) return mostrarAlerta("Ingresa una cantidad mayor a cero.", "error");
+
+            if (tipoSel === 'Salida') {
+                const stockDisponible = window.stockGlobal ? (window.stockGlobal[idProd] || 0) : 0;
+                if (cant > stockDisponible) return mostrarAlerta(`No podés retirar ${cant}. Solo tenés ${stockDisponible} en stock.`, "error");
+            }
+
+            btn.disabled = true; btn.innerText = "GUARDANDO...";
+            try {
+                const d = new Date();
+                const fechaAppSheet = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:${String(d.getSeconds()).padStart(2, '0')}`;
+
+                await callAppSheet(API.mov, "Add", [{ "PRODUCTO": idProd, "CANTIDAD": cant, "TIPO": tipoSel, "FECHA": fechaAppSheet }]);
+                
+                if (tipoSel === 'Entrada') window.stockGlobal[idProd] += cant;
+                else window.stockGlobal[idProd] -= cant;
+                
+                const opcion = selProd.options[selProd.selectedIndex];
+                const nombreProd = opcion.text.split(' (Disp:')[0];
+                opcion.text = `${nombreProd} (Disp: ${window.stockGlobal[idProd]})`;
+                
+                const stockFinal = window.stockGlobal[idProd];
+                const stockMinimo = window.minGlobal[idProd];
+                
+                if (tipoSel === 'Salida' && stockFinal <= stockMinimo) {
+                    enviarAlertaMail(nombreProd, stockFinal, stockMinimo);
+                    mostrarAlerta(`Movimiento guardado. ¡Ojo! Stock bajo de ${nombreProd}`, "info");
+                } else {
+                    mostrarAlerta("¡Movimiento guardado exitosamente!", "exito"); 
+                }
+                cantInput.value = ''; 
+            } catch (e) { mostrarAlerta(e.message, "error"); }
+            btn.disabled = false; btn.innerText = "CONFIRMAR";
         }
 
-        cantInput.value = ''; 
-        
-    } catch (e) { 
-        mostrarAlerta(e.message, "error"); 
-    }
-    
-    btn.disabled = false; 
-    btn.innerText = "CONFIRMAR";
-}
- =========================================================================
-        // 7. MÓDULO: GESTIÓN DE PRODUCTOS E INVENTARIO
+        // =========================================================================
+        // 7. MÓDULO: GESTIÓN DE PRODUCTOS
         // =========================================================================
 
         async function verProductos() {
             showPage('productos');
             const cont = document.getElementById('lista-prods');
             document.getElementById('buscador-productos').value = ''; 
-            
             const locales = getDatosLocales();
             if (locales.prods.length > 0) procesarYRenderizarProductos(locales.prods, locales.movs);
-            else cont.innerHTML = '<div class="text-center py-10"><i class="fas fa-circle-notch fa-spin text-3xl text-blue-500 mb-2"></i><p class="text-slate-400 italic">Sincronizando por primera vez...</p></div>';
-
+            else cont.innerHTML = '<div class="text-center py-10"><i class="fas fa-circle-notch fa-spin text-3xl text-amber-600 mb-2"></i></div>';
             try {
                 const frescos = await syncDatos();
                 procesarYRenderizarProductos(frescos.prods, frescos.movs);
             } catch (e) { 
                 if (locales.prods.length === 0) {
-                    cont.innerHTML = '<p class="text-center text-red-500 font-bold mt-10">Fallo de conexión.</p>';
+                    cont.innerHTML = '<p class="text-center text-red-500 mt-10">Fallo de conexión.</p>';
                     mostrarAlerta(e.message, "error"); 
                 }
             }
@@ -474,27 +427,21 @@ async function guardarMov() {
                 if (m.TIPO === 'Entrada') stockMapaProductos[m.PRODUCTO] += cant;
                 else stockMapaProductos[m.PRODUCTO] -= cant;
             });
-            datosProductos = prods; 
-            renderizarProductos(datosProductos);
+            datosProductos = prods; renderizarProductos(datosProductos);
         }
 
         function filtrarProductos() {
             const texto = document.getElementById('buscador-productos').value.toLowerCase();
-            const filtrados = datosProductos.filter(p => p.NOMBRE.toLowerCase().includes(texto));
-            renderizarProductos(filtrados);
+            renderizarProductos(datosProductos.filter(p => p.NOMBRE.toLowerCase().includes(texto)));
         }
 
         function renderizarProductos(prodsArray) {
             const cont = document.getElementById('lista-prods');
-            if(prodsArray.length === 0) {
-                cont.innerHTML = '<p class="text-center text-slate-400 font-bold mt-10">No se encontraron productos.</p>';
-                return;
-            }
+            if(prodsArray.length === 0) { cont.innerHTML = '<p class="text-center text-slate-400 mt-10">No hay productos.</p>'; return; }
             cont.innerHTML = prodsArray.map(p => {
                 const idReal = getId(p);
                 const stock = stockMapaProductos[idReal] || 0;
                 const min = parseInt(p["STOCK MINIMO"]) || 0;
-                const inicial = parseInt(p["STOCK INICIAL"]) || 0;
                 const bajo = stock <= min;
                 return `
                 <div class="bg-white p-5 rounded-2xl border ${bajo ? 'border-red-200 bg-red-50' : 'border-slate-100'} shadow-sm flex justify-between items-center">
@@ -503,8 +450,8 @@ async function guardarMov() {
                         <p class="text-[10px] text-slate-400 font-bold uppercase">Stock: ${stock} | Mín: ${min}</p>
                     </div>
                     <div class="flex gap-2">
-                        <button onclick="abrirModalEditar('${idReal}', '${p.NOMBRE}', ${inicial}, ${min})" class="w-10 h-10 bg-blue-50 text-blue-500 rounded-xl flex items-center justify-center active:scale-90 transition-transform"><i class="fas fa-pen text-sm"></i></button>
-                        <button onclick="borrarProducto('${idReal}', '${p.NOMBRE}')" class="w-10 h-10 bg-red-50 text-red-500 rounded-xl flex items-center justify-center active:scale-90 transition-transform"><i class="fas fa-trash-can text-sm"></i></button>
+                        <button onclick="abrirModalEditar('${idReal}', '${p.NOMBRE}', ${parseInt(p["STOCK INICIAL"]) || 0}, ${min})" class="w-10 h-10 bg-blue-50 text-blue-500 rounded-xl flex items-center justify-center"><i class="fas fa-pen text-sm"></i></button>
+                        <button onclick="borrarProducto('${idReal}', '${p.NOMBRE}')" class="w-10 h-10 bg-red-50 text-red-500 rounded-xl flex items-center justify-center"><i class="fas fa-trash-can text-sm"></i></button>
                     </div>
                 </div>`;
             }).join('');
@@ -525,198 +472,107 @@ async function guardarMov() {
             const n = document.getElementById('edit-prod-nombre').value;
             const i = parseInt(document.getElementById('edit-prod-inicial').value) || 0;
             const m = parseInt(document.getElementById('edit-prod-min').value) || 0;
-            
             if (!n) return mostrarAlerta("El nombre es obligatorio", "error");
-            
             const btn = document.getElementById('btnGuardarEdicion');
             btn.disabled = true; btn.innerText = "GUARDANDO...";
-            
             try {
-                // Mandamos la orden "Edit" con el ID exacto
-                await callAppSheet(API.prod, "Edit", [{ 
-                    "Row ID": id,
-                    "NOMBRE": n, 
-                    "STOCK MINIMO": m,
-                    "STOCK INICIAL": i
-                }]);
+                await callAppSheet(API.prod, "Edit", [{ "Row ID": id, "NOMBRE": n, "STOCK MINIMO": m, "STOCK INICIAL": i }]);
                 mostrarAlerta("Producto actualizado", "exito");
-                cerrarModalEditar();
-                verProductos(); // Recarga la lista para mostrar los cambios
+                cerrarModalEditar(); verProductos();
             } catch (e) { mostrarAlerta(e.message, "error"); }
-            
             btn.disabled = false; btn.innerText = "GUARDAR";
         }
 
         async function confirmarNuevoProducto() {
-            const nInput = document.getElementById('new-prod-nombre');
-            const iInput = document.getElementById('new-prod-inicial');
-            const mInput = document.getElementById('new-prod-min');
-            
-            const n = nInput.value;
-            const i = parseInt(iInput.value) || 0;
-            const m = parseInt(mInput.value) || 0;
-            
+            const n = document.getElementById('new-prod-nombre').value;
+            const i = parseInt(document.getElementById('new-prod-inicial').value) || 0;
+            const m = parseInt(document.getElementById('new-prod-min').value) || 0;
             if (!n) return mostrarAlerta("El nombre es obligatorio", "error");
-            if (i < 0) return mostrarAlerta("El stock inicial no puede ser negativo", "error");
-            if (m < 0) return mostrarAlerta("El stock mínimo no puede ser negativo", "error");
-            
             const btn = document.getElementById('btnCrear');
-            btn.disabled = true; 
-            btn.innerText = "CREANDO...";
-            
+            btn.disabled = true; btn.innerText = "CREANDO...";
             try {
-                await callAppSheet(API.prod, "Add", [{ 
-                    "NOMBRE": n, 
-                    "STOCK MINIMO": m,
-                    "STOCK INICIAL": i
-                }]);
-                
-                mostrarAlerta("Producto creado correctamente", "exito");
-                cerrarModal();
-                
-                nInput.value = '';
-                iInput.value = '';
-                mInput.value = '';
-                
-                if (!document.getElementById('productos-screen').classList.contains('hidden')) {
-                    verProductos();
-                }
-                
-            } catch (e) { 
-                mostrarAlerta(e.message, "error"); 
-            }
-            
-            btn.disabled = false; 
-            btn.innerText = "CREAR";
+                await callAppSheet(API.prod, "Add", [{ "NOMBRE": n, "STOCK MINIMO": m, "STOCK INICIAL": i }]);
+                mostrarAlerta("Producto creado", "exito");
+                cerrarModal(); verProductos();
+            } catch (e) { mostrarAlerta(e.message, "error"); }
+            btn.disabled = false; btn.innerText = "CREAR";
         }
 
         async function borrarProducto(id, nombre) {
             mostrarConfirmacion(`¿Borrar "${nombre}" y todo su historial?`, async () => {
                 try {
-                    mostrarAlerta(`Limpiando registros de ${nombre}...`, "info");
-
+                    mostrarAlerta("Limpiando registros...", "info");
                     const todosLosMovs = await callAppSheet(API.mov, "Find");
-                    
-                    const movsDelProducto = todosLosMovs
-                        .filter(m => m.PRODUCTO === id)
-                        .map(m => ({ "Row ID": m["Row ID"] || m._RowNumber })); 
-
-                    if (movsDelProducto.length > 0) {
-                        await callAppSheet(API.mov, "Delete", movsDelProducto);
-                    }
-
+                    const movsDelProducto = todosLosMovs.filter(m => m.PRODUCTO === id).map(m => ({ "Row ID": m["Row ID"] || m._RowNumber })); 
+                    if (movsDelProducto.length > 0) await callAppSheet(API.mov, "Delete", movsDelProducto);
                     await callAppSheet(API.prod, "Delete", [{ "Row ID": id }]);
-                    
-                    mostrarAlerta("Producto y movimientos eliminados", "exito");
-                    verProductos(); 
-                    
-                } catch (e) {
-                    mostrarAlerta("Error en la limpieza: " + e.message, "error");
-                }
+                    mostrarAlerta("Eliminado correctamente", "exito"); verProductos();
+                } catch (e) { mostrarAlerta("Error: " + e.message, "error"); }
             });
         }
 
-
         // =========================================================================
-        // 8. MÓDULO: HISTORIAL DE MOVIMIENTOS
+        // 8. MÓDULO: HISTORIAL
         // =========================================================================
 
         async function verHistorial() {
             showPage('historial');
             const cont = document.getElementById('lista-hist');
-            filtroHistorial = 'Todos';
-            actualizarBotonesFiltro();
-
+            filtroHistorial = 'Todos'; actualizarBotonesFiltro();
             const locales = getDatosLocales();
             if (locales.movs.length > 0) procesarYRenderizarHistorial(locales.prods, locales.movs);
-            else cont.innerHTML = '<div class="text-center py-10"><i class="fas fa-circle-notch fa-spin text-3xl text-slate-800 mb-2"></i><p class="text-slate-400 italic">Cargando...</p></div>';
-
+            else cont.innerHTML = '<div class="text-center py-10"><i class="fas fa-circle-notch fa-spin text-3xl text-slate-800"></i></div>';
             try {
                 const frescos = await syncDatos();
                 procesarYRenderizarHistorial(frescos.prods, frescos.movs);
-            } catch (e) { 
-                if (locales.movs.length === 0) {
-                    cont.innerHTML = '<p class="text-center text-red-500 font-bold mt-10">Error al cargar.</p>';
-                    mostrarAlerta(e.message, "error");
-                }
-            }
+            } catch (e) { if (locales.movs.length === 0) mostrarAlerta(e.message, "error"); }
         }
 
         function procesarYRenderizarHistorial(prods, movs) {
             mapaNombresHistorial = {};
             prods.forEach(p => mapaNombresHistorial[getId(p)] = p.NOMBRE);
-            datosHistorial = movs.reverse(); 
-            renderizarHistorial();
+            datosHistorial = [...movs].reverse(); renderizarHistorial();
         }
 
         function filtrarHistorial(tipo) {
-            filtroHistorial = tipo;
-            actualizarBotonesFiltro();
-            renderizarHistorial();
+            filtroHistorial = tipo; actualizarBotonesFiltro(); renderizarHistorial();
         }
 
         function actualizarBotonesFiltro() {
-            const btnActivo = "flex-1 py-2 text-xs font-bold rounded-xl bg-white shadow-sm text-slate-800 transition-all";
-            const btnInactivo = "flex-1 py-2 text-xs font-bold rounded-xl text-slate-500 hover:text-slate-800 transition-all";
-            
-            document.getElementById('filtro-todos').className = filtroHistorial === 'Todos' ? btnActivo : btnInactivo;
-            document.getElementById('filtro-entradas').className = filtroHistorial === 'Entrada' ? btnActivo : btnInactivo;
-            document.getElementById('filtro-salidas').className = filtroHistorial === 'Salida' ? btnActivo : btnInactivo;
+            const btnAct = "flex-1 py-2 text-xs font-bold rounded-xl bg-white shadow-sm text-slate-800";
+            const btnIna = "flex-1 py-2 text-xs font-bold rounded-xl text-slate-500";
+            document.getElementById('filtro-todos').className = filtroHistorial === 'Todos' ? btnAct : btnIna;
+            document.getElementById('filtro-entradas').className = filtroHistorial === 'Entrada' ? btnAct : btnIna;
+            document.getElementById('filtro-salidas').className = filtroHistorial === 'Salida' ? btnAct : btnIna;
         }
 
         function renderizarHistorial() {
             const cont = document.getElementById('lista-hist');
-
-            if(datosHistorial.length === 0) {
-                cont.innerHTML = '<p class="text-center text-slate-400 font-bold mt-10">El historial está vacío.</p>';
-                return;
-            }
-
-            let filtrados = datosHistorial;
-            if (filtroHistorial !== 'Todos') {
-                filtrados = datosHistorial.filter(m => m.TIPO === filtroHistorial);
-            }
-
-            if(filtrados.length === 0) {
-                cont.innerHTML = `<p class="text-center text-slate-400 font-bold mt-10">No hay movimientos de ${filtroHistorial.toLowerCase()}.</p>`;
-                return;
-            }
-
-            const paraMostrar = filtrados.slice(0, 20);
-
-            // Agregamos el index para saber si es uno de los primeros 3
-            cont.innerHTML = paraMostrar.map((m, index) => {
-                const nombreFinal = mapaNombresHistorial[m.PRODUCTO] || m.PRODUCTO || 'Producto Eliminado';
+            let filtrados = filtroHistorial === 'Todos' ? datosHistorial : datosHistorial.filter(m => m.TIPO === filtroHistorial);
+            if(filtrados.length === 0) { cont.innerHTML = '<p class="text-center text-slate-400 mt-10">Vacío.</p>'; return; }
+            cont.innerHTML = filtrados.slice(0, 20).map((m, index) => {
                 const idMov = getId(m);
-                
-                // Magia: Solo mostramos la crucecita roja si el índice es menor a 3 (los últimos 3 movimientos)
-                const botonAnular = index < 3 ? `<button onclick="borrarMovimiento('${idMov}')" class="ml-4 text-slate-300 active:text-red-500 transition-colors"><i class="fas fa-times-circle"></i></button>` : '';
-
+                const btnAnular = index < 3 ? `<button onclick="borrarMovimiento('${idMov}')" class="ml-4 text-slate-300"><i class="fas fa-times-circle"></i></button>` : '';
                 return `
                 <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex justify-between items-center">
                     <div>
-                        <p class="font-black text-slate-800">${nombreFinal}</p>
+                        <p class="font-black text-slate-800">${mapaNombresHistorial[m.PRODUCTO] || 'Eliminado'}</p>
                         <p class="text-[10px] text-slate-400 font-bold uppercase">${fechaArg(m.FECHA)}</p>
                     </div>
                     <div class="flex items-center">
                         <span class="font-black ${m.TIPO === 'Entrada' ? 'text-emerald-500' : 'text-red-500'} text-lg">${m.TIPO === 'Entrada' ? '+' : '-'}${m.CANTIDAD || 0}</span>
-                        ${botonAnular}
+                        ${btnAnular}
                     </div>
-                </div>`
+                </div>`;
             }).join('');
         }
 
         async function borrarMovimiento(idMov) {
-            mostrarConfirmacion("¿Anular este movimiento? Se ajustará el stock.", async () => {
+            mostrarConfirmacion("¿Anular este movimiento?", async () => {
                 try {
-                    mostrarAlerta("Anulando...", "info");
-                    // Mandamos la orden "Delete" directa al registro de movimiento
                     await callAppSheet(API.mov, "Delete", [{ "Row ID": idMov }]);
-                    mostrarAlerta("Movimiento anulado correctamente", "exito");
-                    verHistorial(); // Refrescamos todo
-                } catch (e) {
-                    mostrarAlerta("Error al anular: " + e.message, "error");
-                }
+                    mostrarAlerta("Anulado", "exito"); verHistorial();
+                } catch (e) { mostrarAlerta(e.message, "error"); }
             });
         }
 
