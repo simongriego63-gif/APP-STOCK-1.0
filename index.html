@@ -66,7 +66,7 @@
                 </div>
                 <div>
                     <label class="text-[10px] font-black text-amber-800/50 uppercase tracking-widest ml-1">Cantidad</label>
-                    <input type="number" id="inputCant" placeholder="0" class="w-full p-4 bg-[#FAF6F3] rounded-2xl outline-none font-black text-[#4A3022] mt-2 text-xl">
+                    <input type="number" id="inputCant" placeholder="0" max="9999" oninput="if(this.value.length > 4) this.value = this.value.slice(0,4);" class="w-full p-4 bg-[#FAF6F3] rounded-2xl outline-none font-black text-[#4A3022] mt-2 text-xl">
                 </div>
                 <button onclick="guardarMov()" id="btnSave" class="w-full bg-[#4A3022] text-white p-5 rounded-2xl font-bold shadow-xl active:bg-black transition-all">CONFIRMAR</button>
             </div>
@@ -394,6 +394,9 @@ async function guardarMov() {
 
             btn.disabled = true; 
             btn.innerText = "GUARDANDO...";
+    // NUEVO: Apagamos los botones de Entrada/Salida para que no los toquen
+            document.getElementById('btn-ent').disabled = true;
+            document.getElementById('btn-sal').disabled = true;
             
             try {
                 const d = new Date();
@@ -444,6 +447,9 @@ async function guardarMov() {
             
             btn.disabled = false; 
             btn.innerText = "CONFIRMAR";
+            document.getElementById('btn-ent').disabled = false;
+            document.getElementById('btn-sal').disabled = false;
+        
         }
         // =========================================================================
         // 7. MÓDULO: GESTIÓN DE PRODUCTOS E INVENTARIO
