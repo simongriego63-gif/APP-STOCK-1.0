@@ -397,6 +397,8 @@ async function guardarMov() {
     // NUEVO: Apagamos los botones de Entrada/Salida para que no los toquen
             document.getElementById('btn-ent').disabled = true;
             document.getElementById('btn-sal').disabled = true;
+            document.getElementById('selectProd').disabled = true; // Bloquea el producto
+            document.getElementById('inputCant').disabled = true;  // Bloquea la cantidad
             
             try {
                 const d = new Date();
@@ -449,7 +451,8 @@ async function guardarMov() {
             btn.innerText = "CONFIRMAR";
             document.getElementById('btn-ent').disabled = false;
             document.getElementById('btn-sal').disabled = false;
-        
+            document.getElementById('selectProd').disabled = false; // Desbloquea el producto
+            document.getElementById('inputCant').disabled = false;  // Desbloquea la cantidad
         }
         // =========================================================================
         // 7. MÓDULO: GESTIÓN DE PRODUCTOS E INVENTARIO
