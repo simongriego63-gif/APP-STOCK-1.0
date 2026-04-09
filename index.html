@@ -10,9 +10,9 @@
     
     <style>
         :root {
-            --bg-body: #F9FAFB; /* Gray 50 */
-            --text-main: #111827; /* Gray 900 */
-            --accent: #0F172A; /* Slate 900 */
+            --bg-body: #F9FAFB;
+            --text-main: #111827;
+            --accent: #0F172A;
         }
         body { 
             background-color: var(--bg-body); 
@@ -22,35 +22,28 @@
             padding-bottom: 70px;
         }
         
-        /* Animaciones sutiles */
         .fade-in { animation: fadeIn 0.2s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Componentes UI Profesionales */
         .admin-card { background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 12px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); }
         .admin-input { background: #FFFFFF; border: 1px solid #D1D5DB; border-radius: 8px; transition: all 0.2s; font-size: 0.95rem; }
         .admin-input:focus { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); outline: none; }
         
-        /* Segmented Control (Pestañas elegantes) */
         .segment-container { background: #F3F4F6; padding: 4px; border-radius: 8px; display: flex; gap: 4px; }
         .segment-btn { flex: 1; padding: 8px 0; text-align: center; font-size: 0.85rem; font-weight: 600; color: #6B7280; border-radius: 6px; transition: all 0.2s; }
         .segment-btn.active { background: #FFFFFF; color: var(--accent); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
 
-        /* Botón Primario */
-        .btn-primary { background: var(--accent); color: white; font-weight: 600; border-radius: 8px; transition: all 0.2s; border: 1px solid var(--accent); }
+        .btn-primary { background: var(--accent); color: white; font-weight: 600; border-radius: 8px; transition: all 0.2s; border: 1px solid var(--accent); cursor: pointer; }
         .btn-primary:active { background: #1E293B; transform: scale(0.99); }
 
-        /* Navegación Inferior */
         .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: #FFFFFF; border-top: 1px solid #E5E7EB; z-index: 40; display: flex; justify-content: space-around; padding: 0.5rem 0; padding-bottom: env(safe-area-inset-bottom, 0.5rem); }
         .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 64px; height: 48px; color: #9CA3AF; font-size: 0.7rem; font-weight: 500; transition: all 0.2s; cursor: pointer;}
         .nav-item.active { color: var(--accent); font-weight: 600; }
         .nav-item i { font-size: 1.1rem; margin-bottom: 2px; }
 
-        /* Toast Minimalista */
         .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(20px); background: #1F2937; color: white; padding: 12px 20px; border-radius: 8px; font-size: 0.85rem; font-weight: 500; display: flex; align-items: center; gap: 10px; z-index: 100; opacity: 0; pointer-events: none; transition: all 0.3s ease; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); white-space: nowrap; }
         .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; pointer-events: auto; }
 
-        /* Badges */
         .badge { padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
         .badge-success { background: #ECFDF5; color: #059669; border: 1px solid #A7F3D0; }
         .badge-danger { background: #FEF2F2; color: #DC2626; border: 1px solid #FECACA; }
@@ -75,8 +68,11 @@
                     <p class="text-2xl font-bold text-gray-900" id="dash-total-prods">-</p>
                     <p class="text-xs font-medium text-gray-500 mt-1">Total Productos</p>
                 </div>
-                <div class="admin-card p-5 relative overflow-hidden border-l-2 border-l-red-500">
-                    <div class="text-red-400 mb-2"><i class="fas fa-exclamation-circle text-lg"></i></div>
+                <div onclick="navTo('critico')" class="admin-card p-5 relative overflow-hidden border-l-2 border-l-red-500 cursor-pointer hover:bg-red-50 transition-colors group">
+                    <div class="text-red-400 mb-2 flex justify-between items-start">
+                        <i class="fas fa-exclamation-circle text-lg"></i>
+                        <i class="fas fa-chevron-right text-xs opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                    </div>
                     <p class="text-2xl font-bold text-gray-900" id="dash-stock-critico">-</p>
                     <p class="text-xs font-medium text-gray-500 mt-1">Stock Crítico</p>
                 </div>
@@ -86,6 +82,19 @@
                 <i class="fas fa-plus"></i>
                 <span class="text-sm tracking-wide">REGISTRAR MOVIMIENTO</span>
             </button>
+        </div>
+
+        <div id="critico-screen" class="hidden fade-in">
+            <header class="mb-6 mt-4 border-b border-gray-200 pb-4 flex items-center gap-3">
+                <button onclick="navTo('home')" class="w-8 h-8 flex items-center justify-center text-gray-500 hover:bg-gray-200 rounded-lg transition-colors"><i class="fas fa-arrow-left"></i></button>
+                <div>
+                    <h2 class="text-xl font-bold text-gray-900">Atención a Proveedores</h2>
+                    <p class="text-xs text-gray-500">Productos por debajo del mínimo</p>
+                </div>
+            </header>
+            
+            <div id="lista-critico" class="space-y-4 pb-10">
+                </div>
         </div>
 
         <div id="movimientos-screen" class="hidden fade-in">
@@ -162,7 +171,9 @@
             <div id="lista-hist" class="space-y-2"></div>
         </div>
 
-    </div> <nav class="bottom-nav">
+    </div>
+
+    <nav class="bottom-nav">
         <div class="nav-item active" id="nav-home" onclick="navTo('home')">
             <i class="fas fa-chart-line"></i><span>Panel</span>
         </div>
@@ -177,15 +188,15 @@
         </div>
     </nav>
 
-    <div id="modal-producto" class="hidden fixed inset-0 bg-gray-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-        <div class="admin-card w-full max-w-sm p-6 fade-in">
+    <div id="modal-producto" class="hidden fixed inset-0 bg-gray-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 overflow-y-auto">
+        <div class="admin-card w-full max-w-sm p-6 fade-in my-auto">
             <h2 id="modal-prod-titulo" class="text-lg font-bold text-gray-900 mb-5">Gestión de Producto</h2>
             <input type="hidden" id="modal-prod-id">
             
             <div class="space-y-4">
                 <div>
-                    <label class="text-xs font-semibold text-gray-700 block mb-1">Nombre</label>
-                    <input type="text" id="modal-prod-nombre" class="w-full admin-input p-2.5">
+                    <label class="text-xs font-semibold text-gray-700 block mb-1">Nombre del producto</label>
+                    <input type="text" id="modal-prod-nombre" placeholder="Ej: Café Bourbon" class="w-full admin-input p-2.5">
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
@@ -197,6 +208,15 @@
                         <input type="number" id="modal-prod-min" class="w-full admin-input p-2.5 text-center">
                     </div>
                 </div>
+                <div class="border-t border-gray-100 pt-3">
+                    <label class="text-xs font-semibold text-gray-700 block mb-1">Nombre del Proveedor</label>
+                    <input type="text" id="modal-prod-proveedor" placeholder="Ej: Distribuidora Granos S.A." class="w-full admin-input p-2.5">
+                </div>
+                <div>
+                    <label class="text-xs font-semibold text-gray-700 block mb-1">Contacto Proveedor (Link o Tel)</label>
+                    <input type="text" id="modal-prod-contacto" placeholder="Ej: https://wa.me/54911000000" class="w-full admin-input p-2.5 text-sm">
+                </div>
+
                 <div class="flex gap-2 mt-6 pt-2 border-t border-gray-100">
                     <button onclick="cerrarModalProducto()" class="flex-1 p-2.5 text-sm font-semibold text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">Cancelar</button>
                     <button id="btnGuardarProd" onclick="guardarProducto()" class="flex-1 btn-primary p-2.5 text-sm flex justify-center items-center gap-2">
@@ -221,13 +241,10 @@
 
     <div id="toast" class="toast">
         <i id="toast-icon" class="fas fa-check-circle"></i>
-        <span id="toast-msg">Mensaje del sistema</span>
+        <span id="toast-msg">Mensaje</span>
     </div>
 
     <script>
-        // =========================================================================
-        // CONFIGURACIÓN (Tus datos intactos)
-        // =========================================================================
         const API = {
             id: "f8afccef-c882-4dbb-97c4-19e41f9a8dfb",
             key: "V2-NQngd-8YSov-dSXQ9-hvgfd-JvtA2-YMHdE-8Jnb2-GCeJp",
@@ -241,9 +258,6 @@
             datosProductos: [], stockMapa: {}, minMapa: {}
         };
 
-        // =========================================================================
-        // UTILIDADES Y UI
-        // =========================================================================
         function getId(fila) { return fila["Row ID"] || fila.ID_PRODUCTO; }
         function fechaArg(fechaStr) {
             if (!fechaStr) return '';
@@ -253,15 +267,20 @@
 
         function navTo(page) {
             document.querySelectorAll('div[id$="-screen"]').forEach(d => d.classList.add('hidden'));
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            
+            // Solo marcar activo el menú inferior si no es la pantalla de críticos (no está en el menú)
+            if(page !== 'critico') {
+                document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+                if(document.getElementById('nav-' + page)) document.getElementById('nav-' + page).classList.add('active');
+            }
             
             document.getElementById(page + '-screen').classList.remove('hidden');
-            if(document.getElementById('nav-' + page)) document.getElementById('nav-' + page).classList.add('active');
 
             if(page === 'productos') verProductos();
             if(page === 'historial') verHistorial();
             if(page === 'movimientos') cargarSelectMovimientos();
             if(page === 'home') actualizarDashboard();
+            if(page === 'critico') armarStockCritico(); // <-- Carga la nueva pantalla
         }
 
         function setTipo(t) {
@@ -292,9 +311,6 @@
         function cerrarConfirmacion() { document.getElementById('modal-confirm').classList.add('hidden'); }
         function ejecutarConfirmacion() { cerrarConfirmacion(); if (STATE.confirmCallback) STATE.confirmCallback(); }
 
-        // =========================================================================
-        // CONEXIÓN API
-        // =========================================================================
         async function callAppSheet(tableName, action, rows = []) {
             const urlBackend = 'https://script.google.com/macros/s/AKfycbzSFRa_Y4y2wLUHJKNFSGGj-wLFfovqHkirdm4lF9LFqSOSpdTjhJNvrCrmbBhh0BwU/exec';
             try {
@@ -344,10 +360,6 @@
             fetch(urlBackend, { method: 'POST', body: JSON.stringify({ action: "sendEmail", nombreProd, stockActual, stockMin }) }).catch(e => {});
         }
 
-        // =========================================================================
-        // PANTALLAS
-        // =========================================================================
-        
         async function actualizarDashboard() {
             const { prods } = getDatosLocales();
             if(prods.length === 0) await syncDatos();
@@ -355,6 +367,85 @@
             document.getElementById('dash-total-prods').innerText = Object.keys(STATE.stockMapa).length;
             const criticos = Object.keys(STATE.stockMapa).filter(id => STATE.stockMapa[id] <= STATE.minMapa[id]).length;
             document.getElementById('dash-stock-critico').innerText = criticos;
+        }
+
+        // =========================================================================
+        // LÓGICA DE STOCK CRÍTICO AGRUPADO POR PROVEEDOR
+        // =========================================================================
+        function armarStockCritico() {
+            const cont = document.getElementById('lista-critico');
+            
+            // 1. Filtrar solo los productos críticos
+            const criticos = STATE.datosProductos.filter(p => STATE.stockMapa[getId(p)] <= STATE.minMapa[getId(p)]);
+            
+            if(criticos.length === 0) {
+                cont.innerHTML = `
+                    <div class="text-center py-10 mt-10">
+                        <i class="fas fa-check-circle text-4xl text-emerald-400 mb-3"></i>
+                        <p class="text-gray-900 font-bold">¡Todo en orden!</p>
+                        <p class="text-gray-500 text-sm">No hay productos en estado crítico.</p>
+                    </div>`;
+                return;
+            }
+
+            // 2. Agrupar por proveedor
+            const agrupados = {};
+            criticos.forEach(p => {
+                const prov = p.PROVEEDOR || 'Sin Proveedor Asignado';
+                const contacto = p.CONTACTO_PROVEEDOR || '';
+                
+                if(!agrupados[prov]) {
+                    agrupados[prov] = { productos: [], linkContacto: contacto };
+                }
+                // Si encontramos un contacto válido en otro producto del mismo proveedor, lo guardamos
+                if(!agrupados[prov].linkContacto && contacto) agrupados[prov].linkContacto = contacto;
+                
+                agrupados[prov].productos.push(p);
+            });
+
+            // 3. Renderizar HTML
+            let html = '';
+            for (const [proveedor, data] of Object.entries(agrupados)) {
+                
+                // Configurar botón de contacto si existe el link
+                let btnContacto = '';
+                if(data.linkContacto) {
+                    // Si el usuario puso un número suelto, intentamos adivinar que es WhatsApp, si no, lo dejamos como link
+                    let href = data.linkContacto.includes('http') ? data.linkContacto : `https://wa.me/${data.linkContacto.replace(/[^0-9]/g, '')}`;
+                    btnContacto = `
+                        <a href="${href}" target="_blank" class="px-3 py-1.5 bg-gray-900 text-white text-xs font-semibold rounded-lg hover:bg-black transition-colors flex items-center gap-1 shadow-sm">
+                            <i class="fab fa-whatsapp"></i> Contactar
+                        </a>`;
+                }
+
+                // Generar lista de ítems de este proveedor
+                const itemsHtml = data.productos.map(p => {
+                    const id = getId(p);
+                    const stock = STATE.stockMapa[id];
+                    const min = STATE.minMapa[id];
+                    return `
+                        <div class="flex justify-between items-center py-2 border-b border-gray-50 last:border-0">
+                            <p class="text-sm font-semibold text-gray-800">${p.NOMBRE}</p>
+                            <p class="text-xs text-red-600 font-bold">Stock: ${stock} <span class="text-gray-400 font-medium">(Mín: ${min})</span></p>
+                        </div>
+                    `;
+                }).join('');
+
+                html += `
+                <div class="admin-card p-4">
+                    <div class="flex justify-between items-center border-b border-gray-100 pb-3 mb-2">
+                        <h3 class="font-bold text-gray-900 text-sm flex items-center gap-2">
+                            <i class="fas fa-building text-gray-400"></i> ${proveedor}
+                        </h3>
+                        ${btnContacto}
+                    </div>
+                    <div class="space-y-1">
+                        ${itemsHtml}
+                    </div>
+                </div>`;
+            }
+
+            cont.innerHTML = html;
         }
 
         async function cargarSelectMovimientos() {
@@ -417,19 +508,18 @@
                     const stock = STATE.stockMapa[idReal] || 0;
                     const min = STATE.minMapa[idReal] || 0;
                     const bajo = stock <= min;
-                    const badge = bajo ? '<span class="badge badge-danger">Crítico</span>' : '<span class="badge badge-success">Óptimo</span>';
+                    const prov = p.PROVEEDOR ? `<span class="text-[10px] text-gray-400 ml-2"><i class="fas fa-building mr-1"></i>${p.PROVEEDOR}</span>` : '';
                     
                     return `
                     <div class="admin-card p-3 flex justify-between items-center ${bajo ? 'border-red-200' : ''}">
                         <div>
                             <div class="flex items-center gap-2 mb-1">
                                 <p class="font-semibold text-gray-900 text-sm">${p.NOMBRE}</p>
-                                ${badge}
                             </div>
-                            <p class="text-xs text-gray-500">Stock actual: <span class="font-bold text-gray-800">${stock}</span> | Mínimo: ${min}</p>
+                            <p class="text-xs text-gray-500">Stock: <span class="font-bold text-gray-800">${stock}</span> | Mín: ${min} ${prov}</p>
                         </div>
                         <div class="flex gap-1">
-                            <button onclick="abrirModalProducto('${idReal}', '${p.NOMBRE}', ${p['STOCK INICIAL']||0}, ${min})" class="w-8 h-8 text-gray-400 hover:text-gray-800 transition-colors"><i class="fas fa-pen text-xs"></i></button>
+                            <button onclick="abrirModalProducto('${idReal}')" class="w-8 h-8 text-gray-400 hover:text-gray-800 transition-colors"><i class="fas fa-pen text-xs"></i></button>
                             <button onclick="borrarProducto('${idReal}', '${p.NOMBRE}')" class="w-8 h-8 text-gray-400 hover:text-red-600 transition-colors"><i class="fas fa-trash text-xs"></i></button>
                         </div>
                     </div>`;
@@ -447,7 +537,7 @@
 
         function filtrarProductos() {
             const t = document.getElementById('buscador-productos').value.toLowerCase();
-            const f = STATE.datosProductos.filter(p => p.NOMBRE.toLowerCase().includes(t));
+            const f = STATE.datosProductos.filter(p => p.NOMBRE.toLowerCase().includes(t) || (p.PROVEEDOR && p.PROVEEDOR.toLowerCase().includes(t)));
             const cont = document.getElementById('lista-prods');
             if(f.length === 0) cont.innerHTML = '<p class="text-center text-gray-400 text-sm mt-6">Sin resultados.</p>';
             else {
@@ -460,21 +550,38 @@
                             <p class="font-semibold text-gray-900 text-sm">${p.NOMBRE}</p>
                             <p class="text-xs text-gray-500">Stock: ${stock}</p>
                         </div>
-                        <button onclick="abrirModalProducto('${idReal}', '${p.NOMBRE}', ${p['STOCK INICIAL']||0}, ${p['STOCK MINIMO']||0})" class="w-8 h-8 text-gray-400"><i class="fas fa-pen text-xs"></i></button>
+                        <button onclick="abrirModalProducto('${idReal}')" class="w-8 h-8 text-gray-400"><i class="fas fa-pen text-xs"></i></button>
                     </div>`;
                 }).join('');
             }
         }
 
-        function abrirModalProducto(id = '', nombre = '', inicial = '', min = '') {
-            document.getElementById('modal-prod-titulo').innerText = id ? "Editar Producto" : "Nuevo Producto";
-            document.getElementById('modal-prod-id').value = id;
-            document.getElementById('modal-prod-nombre').value = nombre;
-            document.getElementById('modal-prod-inicial').value = inicial;
-            document.getElementById('modal-prod-min').value = min;
-            document.getElementById('modal-prod-inicial').disabled = !!id; 
+        // Refactorizado para buscar directamente del estado (más seguro contra errores de comillas)
+        function abrirModalProducto(id = null) {
+            if(id) {
+                const p = STATE.datosProductos.find(x => getId(x) === id);
+                document.getElementById('modal-prod-titulo').innerText = "Editar Producto";
+                document.getElementById('modal-prod-id').value = id;
+                document.getElementById('modal-prod-nombre').value = p.NOMBRE || '';
+                document.getElementById('modal-prod-inicial').value = p['STOCK INICIAL'] || 0;
+                document.getElementById('modal-prod-min').value = p['STOCK MINIMO'] || 0;
+                document.getElementById('modal-prod-proveedor').value = p.PROVEEDOR || '';
+                document.getElementById('modal-prod-contacto').value = p.CONTACTO_PROVEEDOR || '';
+                document.getElementById('modal-prod-inicial').disabled = true;
+            } else {
+                document.getElementById('modal-prod-titulo').innerText = "Nuevo Producto";
+                document.getElementById('modal-prod-id').value = '';
+                document.getElementById('modal-prod-nombre').value = '';
+                document.getElementById('modal-prod-inicial').value = '';
+                document.getElementById('modal-prod-min').value = '';
+                document.getElementById('modal-prod-proveedor').value = '';
+                document.getElementById('modal-prod-contacto').value = '';
+                document.getElementById('modal-prod-inicial').disabled = false;
+            }
+            
             document.getElementById('modal-producto').classList.remove('hidden');
         }
+
         function cerrarModalProducto() { document.getElementById('modal-producto').classList.add('hidden'); }
 
         async function guardarProducto() {
@@ -482,6 +589,8 @@
             const n = document.getElementById('modal-prod-nombre').value;
             const i = parseInt(document.getElementById('modal-prod-inicial').value) || 0;
             const m = parseInt(document.getElementById('modal-prod-min').value) || 0;
+            const prov = document.getElementById('modal-prod-proveedor').value;
+            const cont = document.getElementById('modal-prod-contacto').value;
             
             if (!n) return showToast("Falta el nombre", "warning");
 
@@ -491,10 +600,10 @@
             
             try {
                 if(id) {
-                    await callAppSheet(API.prod, "Edit", [{ "Row ID": id, "NOMBRE": n, "STOCK MINIMO": m }]);
+                    await callAppSheet(API.prod, "Edit", [{ "Row ID": id, "NOMBRE": n, "STOCK MINIMO": m, "PROVEEDOR": prov, "CONTACTO_PROVEEDOR": cont }]);
                     showToast("Producto actualizado", "success");
                 } else {
-                    await callAppSheet(API.prod, "Add", [{ "NOMBRE": n, "STOCK MINIMO": m, "STOCK INICIAL": i }]);
+                    await callAppSheet(API.prod, "Add", [{ "NOMBRE": n, "STOCK MINIMO": m, "STOCK INICIAL": i, "PROVEEDOR": prov, "CONTACTO_PROVEEDOR": cont }]);
                     showToast("Producto creado", "success");
                 }
                 cerrarModalProducto(); verProductos(true); 
